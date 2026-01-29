@@ -1,4 +1,4 @@
-// worker.js — v1.6
+// worker.js — v1.7
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -23,44 +23,50 @@ function htmlPage() {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>z-image-turbo（Cloudflare Worker）</title>
+
   <style>
+    /* ======== 页面背景：浅灰渐变 ======== */
     body { 
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; 
-      margin: 0; 
-      padding: 16px; 
-      background: #1a1f27; /* v1.6 深蓝灰背景 */
-      color: #e6e6e6;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      margin: 0;
+      padding: 16px;
+      background: linear-gradient(135deg, #e8e8e8, #d4d4d4);
+      color: #222;
     }
 
-    /* 浅色拉丝金属 + 扫光 */
-    main { 
-      max-width: 920px; 
-      margin: 0 auto; 
-      border-radius: 18px;
+    /* ======== 金属卡片：立体 + 拉丝 + 玻璃边框 ======== */
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      border-radius: 20px;
 
-      background: 
-        linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(0,0,0,0.05) 100%),
+      /* 金属拉丝纹理 */
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.25), rgba(0,0,0,0.05)),
         repeating-linear-gradient(
           90deg,
-          rgba(255,255,255,0.15) 0px,
-          rgba(255,255,255,0.15) 1px,
-          rgba(0,0,0,0.05) 2px,
-          rgba(0,0,0,0.05) 3px
+          rgba(255,255,255,0.18) 0px,
+          rgba(255,255,255,0.18) 1px,
+          rgba(0,0,0,0.06) 2px,
+          rgba(0,0,0,0.06) 3px
         ),
-        linear-gradient(135deg, #fdfdfd, #e6e6e6, #f7f7f7);
+        linear-gradient(135deg, #fafafa, #e6e6e6, #f5f5f5);
 
       background-size: 100% 100%, 200% 100%, 100% 100%;
       position: relative;
       overflow: hidden;
 
-      padding: 28px; 
-      box-shadow:
-        0 6px 16px rgba(0,0,0,0.35),
-        inset 0 1px 2px rgba(255,255,255,0.6),
-        inset 0 -1px 3px rgba(0,0,0,0.15);
-      border: 1px solid rgba(255,255,255,0.7);
+      padding: 30px;
 
-      color: #333;
+      /* 立体阴影 */
+      box-shadow:
+        0 10px 25px rgba(0,0,0,0.25),
+        inset 0 1px 2px rgba(255,255,255,0.7),
+        inset 0 -1px 3px rgba(0,0,0,0.15);
+
+      /* 玻璃边框 */
+      border: 1px solid rgba(255,255,255,0.55);
+      backdrop-filter: blur(4px);
     }
 
     /* 扫光效果 */
@@ -78,7 +84,7 @@ function htmlPage() {
         rgba(255,255,255,0) 100%
       );
       transform: skewX(-20deg);
-      animation: sweep 6s ease-in-out infinite;
+      animation: sweep 7s ease-in-out infinite;
     }
 
     @keyframes sweep {
@@ -89,54 +95,67 @@ function htmlPage() {
 
     h1 {
       color: #222;
-      text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+      text-shadow: 0 1px 2px rgba(255,255,255,0.7);
     }
 
     .small {
       color: #555;
     }
 
-    textarea { 
-      width: 100%; 
-      padding: 12px; 
-      font-size: 14px; 
+    /* ======== 输入框：金属边框 + 内阴影 ======== */
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
       box-sizing: border-box;
       border-radius: 10px;
-      border: 1px solid #aaa;
-      outline: none;
+
       background: #fff8e6;
       color: #333;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+
+      border: 1px solid #c0c0c0;
+      box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.8),
+        inset 0 -1px 3px rgba(0,0,0,0.15),
+        0 2px 6px rgba(0,0,0,0.15);
+
       transition: border-color .2s, box-shadow .2s;
     }
+
     textarea:focus {
       border-color: #4da3ff;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+      box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.9),
+        inset 0 -1px 3px rgba(0,0,0,0.2),
+        0 3px 10px rgba(0,0,0,0.25);
     }
 
-    .row { 
-      display:flex; 
-      gap:12px; 
-      flex-wrap:wrap; 
-      align-items:center; 
-      margin-top:12px; 
+    /* ======== 行布局 ======== */
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 12px;
     }
 
-    select, input { 
-      padding: 8px 10px; 
+    /* ======== 下拉框 / 输入框 ======== */
+    select, input {
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid #bbb;
-      outline: none;
       background: #ffffffdd;
       color: #222;
       backdrop-filter: blur(4px);
       transition: border-color .2s;
     }
+
     select:focus, input:focus {
       border-color: #4da3ff;
     }
 
-    button { 
+    /* ======== 按钮 ======== */
+    button {
       padding: 10px 18px;
       border-radius: 8px;
       border: none;
@@ -147,24 +166,28 @@ function htmlPage() {
       transition: background .2s, transform .1s, box-shadow .2s;
       box-shadow: 0 3px 6px rgba(0,0,0,0.25);
     }
+
     button:hover {
       background: linear-gradient(135deg, #3c8be6, #0055d6);
       box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
+
     button:active {
       transform: scale(0.96);
     }
+
     button:disabled {
       background: #777;
       cursor: not-allowed;
       box-shadow: none;
     }
 
-    img { 
-      max-width: 100%; 
-      border-radius: 10px; 
-      margin-top: 16px; 
-      display:none; 
+    /* ======== 图片 ======== */
+    img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 16px;
+      display: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
@@ -172,32 +195,24 @@ function htmlPage() {
     .hint { color: #444; margin-top: 8px; }
   </style>
 </head>
+
 <body>
 <main>
   <h1>z-image-turbo 文生图（Cloudflare Worker）</h1>
   <div class="small">提示：2048 档可能更慢；生成期间请保持页面在前台。</div>
 
-  <textarea id="prompt" rows="6" placeholder="输入提示词...">一只戴墨镜的橘猫，赛博朋克霓虹灯，写实</textarea>
+  <textarea id="prompt" rows="6">一只戴墨镜的橘猫，赛博朋克霓虹灯，写实</textarea>
 
   <div class="row">
-    <label>
-      size：
-      <select id="size">${options}</select>
-    </label>
-
-    <label>
-      steps：
-      <input id="steps" type="number" min="1" max="20" value="9" style="width:90px" />
-    </label>
-
+    <label>size：<select id="size">${options}</select></label>
+    <label>steps：<input id="steps" type="number" min="1" max="20" value="9" style="width:90px" /></label>
     <button id="gen">生成</button>
     <button id="dl" disabled>下载图片</button>
   </div>
 
   <div id="status" class="hint"></div>
   <div id="err" class="err"></div>
-
-  <img id="img" alt="generated image" />
+  <img id="img" />
 </main>
 
 <script>
@@ -227,16 +242,15 @@ function htmlPage() {
 
   async function generate() {
     setError("");
-    setStatus("生成中...（如果长时间没反应，可能是排队或网络慢）");
+    setStatus("生成中...");
     dlBtn.disabled = true;
     imgEl.style.display = "none";
     lastBlob = null;
     cleanupObjectUrl();
 
-    const prompt = (promptEl.value || "").trim();
+    const prompt = promptEl.value.trim();
     const size = sizeEl.value;
     let steps = parseInt(stepsEl.value || "9", 10);
-    if (!Number.isFinite(steps)) steps = 9;
     steps = Math.max(1, Math.min(20, steps));
 
     if (!prompt) {
@@ -274,10 +288,10 @@ function htmlPage() {
       setStatus("完成");
     } catch (e) {
       setStatus("");
-      if (e && e.name === "AbortError") {
-        setError("请求超时（超过 " + (timeoutMs/1000) + " 秒）。可重试或降低尺寸/steps。");
+      if (e.name === "AbortError") {
+        setError("请求超时，可重试或降低尺寸/steps。");
       } else {
-        setError(e && e.message ? e.message : String(e));
+        setError(e.message || String(e));
       }
     } finally {
       clearTimeout(t);
@@ -301,6 +315,7 @@ function htmlPage() {
   dlBtn.addEventListener("click", download);
 })();
 </script>
+
 </body>
 </html>`;
 }
