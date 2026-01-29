@@ -1,4 +1,4 @@
-// worker.js — v1.50
+// worker.js — v1.6
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -28,8 +28,8 @@ function htmlPage() {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; 
       margin: 0; 
       padding: 16px; 
-      background: #f2f2f2;
-      color: #222;
+      background: #1a1f27; /* v1.6 深蓝灰背景 */
+      color: #e6e6e6;
     }
 
     /* 浅色拉丝金属 + 扫光 */
@@ -38,7 +38,6 @@ function htmlPage() {
       margin: 0 auto; 
       border-radius: 18px;
 
-      /* 拉丝金属纹理（细线条） */
       background: 
         linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(0,0,0,0.05) 100%),
         repeating-linear-gradient(
@@ -56,10 +55,12 @@ function htmlPage() {
 
       padding: 28px; 
       box-shadow:
-        0 6px 16px rgba(0,0,0,0.18),
+        0 6px 16px rgba(0,0,0,0.35),
         inset 0 1px 2px rgba(255,255,255,0.6),
         inset 0 -1px 3px rgba(0,0,0,0.15);
       border: 1px solid rgba(255,255,255,0.7);
+
+      color: #333;
     }
 
     /* 扫光效果 */
@@ -87,7 +88,7 @@ function htmlPage() {
     }
 
     h1 {
-      color: #333;
+      color: #222;
       text-shadow: 0 1px 2px rgba(255,255,255,0.6);
     }
 
