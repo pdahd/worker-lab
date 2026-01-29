@@ -1,3 +1,4 @@
+// worker.js — v1.1
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -27,21 +28,80 @@ function htmlPage() {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; 
       margin: 0; 
       padding: 16px; 
-      background: #f2f2f2; /* 浅灰背景 */
+      background: #f2f2f2;
     }
+
     main { 
       max-width: 920px; 
       margin: 0 auto; 
-      background: #ffffff; /* 白色内容卡片 */
-      border-radius: 14px; /* 圆角 */
+      background: #ffffff;
+      border-radius: 14px;
       padding: 24px; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06); /* 轻微阴影 */
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
-    textarea { width: 100%; padding: 12px; font-size: 14px; box-sizing: border-box; }
-    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
-    select, input { padding: 6px 8px; }
-    button { padding: 8px 14px; }
-    img { max-width: 100%; border-radius: 10px; margin-top: 16px; display:none; }
+
+    textarea { 
+      width: 100%; 
+      padding: 12px; 
+      font-size: 14px; 
+      box-sizing: border-box;
+      border-radius: 10px;       /* ← 新增圆角 */
+      border: 1px solid #ccc;
+      outline: none;
+      transition: border-color .2s;
+    }
+    textarea:focus {
+      border-color: #0078ff;
+    }
+
+    .row { 
+      display:flex; 
+      gap:12px; 
+      flex-wrap:wrap; 
+      align-items:center; 
+      margin-top:12px; 
+    }
+
+    select, input { 
+      padding: 8px 10px; 
+      border-radius: 8px;       /* ← 圆角 */
+      border: 1px solid #ccc;
+      outline: none;
+      transition: border-color .2s;
+    }
+    select:focus, input:focus {
+      border-color: #0078ff;
+    }
+
+    button { 
+      padding: 10px 18px;
+      border-radius: 8px;       /* ← 现代化圆角按钮 */
+      border: none;
+      background: #0078ff;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+    button:hover {
+      background: #0063d6;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    img { 
+      max-width: 100%; 
+      border-radius: 10px; 
+      margin-top: 16px; 
+      display:none; 
+    }
+
     .err { color: crimson; margin-top: 12px; white-space: pre-wrap; }
     .hint { color: #666; margin-top: 8px; }
     .small { font-size: 12px; color: #777; margin-top: 8px; }
