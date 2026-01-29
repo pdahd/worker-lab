@@ -1,4 +1,4 @@
-// worker.js — v1.4
+// worker.js — v1.5
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -29,44 +29,70 @@ function htmlPage() {
       margin: 0; 
       padding: 16px; 
       background: #f2f2f2;
-      color: #222; /* 全局文字颜色 */
+      color: #222;
     }
 
-    /* 深色金属镀铬卡片 */
+    /* 浅色拉丝金属 + 扫光 */
     main { 
       max-width: 920px; 
       margin: 0 auto; 
       border-radius: 18px;
 
-      /* 深色金属渐变 */
-      background: linear-gradient(145deg, #2b2b2b, #3d3d3d, #1f1f1f);
-      background-size: 300% 300%;
-      animation: chromeShift 10s ease infinite;
+      /* 拉丝金属纹理（细线条） */
+      background: 
+        linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(0,0,0,0.05) 100%),
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,0.15) 0px,
+          rgba(255,255,255,0.15) 1px,
+          rgba(0,0,0,0.05) 2px,
+          rgba(0,0,0,0.05) 3px
+        ),
+        linear-gradient(135deg, #fdfdfd, #e6e6e6, #f7f7f7);
+
+      background-size: 100% 100%, 200% 100%, 100% 100%;
+      position: relative;
+      overflow: hidden;
 
       padding: 28px; 
       box-shadow:
-        0 6px 16px rgba(0,0,0,0.35),
-        inset 0 1px 2px rgba(255,255,255,0.15),
-        inset 0 -1px 3px rgba(0,0,0,0.4);
-      border: 1px solid rgba(255,255,255,0.15);
-
-      color: #f0f0f0; /* 卡片内部文字颜色 */
+        0 6px 16px rgba(0,0,0,0.18),
+        inset 0 1px 2px rgba(255,255,255,0.6),
+        inset 0 -1px 3px rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.7);
     }
 
-    /* 金属流光动画 */
-    @keyframes chromeShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* 扫光效果 */
+    main::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -150%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.55) 50%,
+        rgba(255,255,255,0) 100%
+      );
+      transform: skewX(-20deg);
+      animation: sweep 6s ease-in-out infinite;
+    }
+
+    @keyframes sweep {
+      0% { left: -150%; }
+      50% { left: 150%; }
+      100% { left: 150%; }
     }
 
     h1 {
-      color: #ffffff;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      color: #333;
+      text-shadow: 0 1px 2px rgba(255,255,255,0.6);
     }
 
     .small {
-      color: #cccccc;
+      color: #555;
     }
 
     textarea { 
@@ -77,14 +103,14 @@ function htmlPage() {
       border-radius: 10px;
       border: 1px solid #aaa;
       outline: none;
-      background: #fff8e6; /* 米黄色 */
-      color: #333; /* 输入文字颜色 */
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      background: #fff8e6;
+      color: #333;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       transition: border-color .2s, box-shadow .2s;
     }
     textarea:focus {
       border-color: #4da3ff;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
     }
 
     .row { 
@@ -118,11 +144,11 @@ function htmlPage() {
       font-size: 14px;
       cursor: pointer;
       transition: background .2s, transform .1s, box-shadow .2s;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.25);
     }
     button:hover {
       background: linear-gradient(135deg, #3c8be6, #0055d6);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
     button:active {
       transform: scale(0.96);
@@ -138,11 +164,11 @@ function htmlPage() {
       border-radius: 10px; 
       margin-top: 16px; 
       display:none; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
-    .err { color: #ff6b6b; margin-top: 12px; white-space: pre-wrap; }
-    .hint { color: #dddddd; margin-top: 8px; }
+    .err { color: #cc0000; margin-top: 12px; white-space: pre-wrap; }
+    .hint { color: #444; margin-top: 8px; }
   </style>
 </head>
 <body>
