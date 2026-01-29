@@ -1,4 +1,4 @@
-// worker.js — v2.0
+// worker.js — v1.9
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -34,10 +34,10 @@ body {
   color: #222;
 }
 
-/* ======== 金属卡片：立体悬浮 + 拉丝 + 玻璃边框 ======== */
+/* ======== 金属卡片：立体 + 拉丝 + 玻璃边框 ======== */
 main {
   max-width: 920px;
-  margin: 24px auto;
+  margin: 0 auto;
   border-radius: 20px;
 
   background:
@@ -57,25 +57,13 @@ main {
 
   padding: 30px;
 
-  /* 悬浮感：双层阴影 */
   box-shadow:
-    0 18px 40px rgba(0,0,0,0.35),   /* 主阴影 */
-    0 4px 10px rgba(0,0,0,0.18),    /* 环境阴影 */
+    0 10px 25px rgba(0,0,0,0.25),
     inset 0 1px 2px rgba(255,255,255,0.7),
     inset 0 -1px 3px rgba(0,0,0,0.15);
 
-  border: 1px solid rgba(255,255,255,0.65);
-  backdrop-filter: blur(6px);
-}
-
-/* 顶部轻微高光边缘 */
-main::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.35);
-  pointer-events: none;
+  border: 1px solid rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
 }
 
 /* ======== 扫光效果：仅在 sweep-active 时运行 ======== */
@@ -110,47 +98,41 @@ main.sweep-active::before {
 h1 {
   color: #222;
   text-shadow: 0 1px 2px rgba(255,255,255,0.7);
-  margin-top: 0;
 }
 
 .small {
   color: #555;
 }
 
-/* ======== 输入框：双层玻璃（金属 + 磨砂） ======== */
+/* ======== 输入框：玻璃拟态 + 暖色半透明背景 ======== */
 textarea {
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px;
   font-size: 14px;
   box-sizing: border-box;
-  border-radius: 14px;
+  border-radius: 12px;
 
-  /* 内层磨砂玻璃 */
-  background: radial-gradient(circle at top left, rgba(255,255,255,0.7), rgba(255,245,225,0.4));
-  background-color: rgba(255,245,225,0.4);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 245, 225, 0.55);
+  backdrop-filter: blur(6px);
 
-  /* 外层金属边框 + 内外阴影 */
-  border: 1px solid rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.6);
   box-shadow:
-    inset 0 1px 2px rgba(255,255,255,0.9),
-    inset 0 -1px 3px rgba(0,0,0,0.18),
-    0 2px 6px rgba(0,0,0,0.18);
+    inset 0 1px 2px rgba(255,255,255,0.8),
+    inset 0 -1px 3px rgba(0,0,0,0.15),
+    0 2px 6px rgba(0,0,0,0.15);
 
   color: #333;
-  transition: border-color .2s, box-shadow .2s, background .2s;
+  transition: border-color .2s, box-shadow .2s;
 }
 
 textarea:focus {
-  border-color: #5ab0ff;
+  border-color: #4da3ff;
   box-shadow:
-    inset 0 1px 2px rgba(255,255,255,1),
-    inset 0 -1px 3px rgba(0,0,0,0.22),
+    inset 0 1px 2px rgba(255,255,255,0.9),
+    inset 0 -1px 3px rgba(0,0,0,0.2),
     0 3px 10px rgba(0,0,0,0.25);
-  background: radial-gradient(circle at top left, rgba(255,255,255,0.9), rgba(255,245,225,0.55));
 }
 
-/* ======== 行布局 ======== */
 .row {
   display: flex;
   gap: 12px;
@@ -166,54 +148,36 @@ select, input {
   background: #ffffffdd;
   color: #222;
   backdrop-filter: blur(4px);
-  transition: border-color .2s, box-shadow .2s;
+  transition: border-color .2s;
 }
 
 select:focus, input:focus {
   border-color: #4da3ff;
-  box-shadow: 0 0 0 1px rgba(77,163,255,0.4);
 }
 
-/* ======== 按钮：霓虹发光风格 ======== */
 button {
   padding: 10px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(90,176,255,0.9);
-  background: radial-gradient(circle at 20% 0%, #5ab0ff, #0066ff);
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #4da3ff, #0066ff);
   color: white;
   font-size: 14px;
   cursor: pointer;
-  transition: 
-    background .2s,
-    transform .1s,
-    box-shadow .2s,
-    border-color .2s;
-  box-shadow:
-    0 0 0 1px rgba(90,176,255,0.6),
-    0 4px 10px rgba(0,0,0,0.35),
-    0 0 12px rgba(90,176,255,0.4);
+  transition: background .2s, transform .1s, box-shadow .2s;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.25);
 }
 
 button:hover {
-  background: radial-gradient(circle at 20% 0%, #6bc0ff, #1a74ff);
-  box-shadow:
-    0 0 0 1px rgba(120,196,255,0.9),
-    0 6px 16px rgba(0,0,0,0.45),
-    0 0 18px rgba(120,196,255,0.7);
-  border-color: rgba(120,196,255,1);
+  background: linear-gradient(135deg, #3c8be6, #0055d6);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 
 button:active {
   transform: scale(0.96);
-  box-shadow:
-    0 0 0 1px rgba(140,210,255,1),
-    0 3px 8px rgba(0,0,0,0.4),
-    0 0 14px rgba(140,210,255,0.9);
 }
 
 button:disabled {
   background: #777;
-  border-color: #777;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -284,7 +248,7 @@ img {
     lastBlob = null;
     cleanupObjectUrl();
 
-    // 启动扫光
+    /* ======== 启动扫光 ======== */
     cardEl.classList.add("sweep-active");
 
     const prompt = promptEl.value.trim();
@@ -315,7 +279,7 @@ img {
 
       if (!res.ok) {
         const t = await res.text();
-        throw new Error("生成失败（HTTP " + res.status + "）\n" + t);
+        throw new Error("生成失败（HTTP " + res.status + "）\\n" + t);
       }
 
       const blob = await res.blob();
@@ -336,7 +300,8 @@ img {
     } finally {
       clearTimeout(t);
       genBtn.disabled = false;
-      // 停止扫光
+
+      /* ======== 停止扫光 ======== */
       cardEl.classList.remove("sweep-active");
     }
   }
@@ -437,7 +402,7 @@ export default {
         upstreamResp = await fetch("https://ai.gitee.com/v1/images/generations", {
           method: "POST",
           headers: {
-            "Authorization": \`Bearer \${env.GITEE_AI_API_KEY}\`,
+            "Authorization": `Bearer ${env.GITEE_AI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -453,7 +418,7 @@ export default {
 
       const upstreamText = await upstreamResp.text();
       if (!upstreamResp.ok) {
-        return textResponse(upstreamText || \`Upstream error: \${upstreamResp.status}\`, 502);
+        return textResponse(upstreamText || `Upstream error: ${upstreamResp.status}`, 502);
       }
 
       let data;
