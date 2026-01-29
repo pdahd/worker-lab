@@ -1,4 +1,4 @@
-// worker.js — v2.0
+// worker.js — v2.1
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -59,8 +59,8 @@ main {
 
   /* 悬浮感：双层阴影 */
   box-shadow:
-    0 18px 40px rgba(0,0,0,0.35),   /* 主阴影 */
-    0 4px 10px rgba(0,0,0,0.18),    /* 环境阴影 */
+    0 18px 40px rgba(0,0,0,0.35),
+    0 4px 10px rgba(0,0,0,0.18),
     inset 0 1px 2px rgba(255,255,255,0.7),
     inset 0 -1px 3px rgba(0,0,0,0.15);
 
@@ -78,33 +78,40 @@ main::after {
   pointer-events: none;
 }
 
-/* ======== 扫光效果：仅在 sweep-active 时运行 ======== */
+/* ======== 镭射扫光（更短间隔） ======== */
 main::before {
   content: "";
   position: absolute;
   top: 0;
-  left: -150%;
-  width: 50%;
+  left: -120%;
+  width: 60%;
   height: 100%;
+
+  /* 镭射渐变：青 → 紫 → 粉 → 黄 */
   background: linear-gradient(
     120deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.55) 50%,
-    rgba(255,255,255,0) 100%
+    rgba(0,255,255,0) 0%,
+    rgba(0,255,255,0.55) 20%,
+    rgba(180,0,255,0.55) 40%,
+    rgba(255,0,150,0.55) 60%,
+    rgba(255,255,0,0.55) 80%,
+    rgba(255,255,0,0) 100%
   );
+
   transform: skewX(-20deg);
-  opacity: 0; /* 默认不显示 */
+  opacity: 0;
+  pointer-events: none;
 }
 
 main.sweep-active::before {
   opacity: 1;
-  animation: sweep 7s ease-in-out infinite;
+  animation: sweep 3.5s ease-in-out infinite;
 }
 
 @keyframes sweep {
-  0% { left: -150%; }
-  50% { left: 150%; }
-  100% { left: 150%; }
+  0% { left: -120%; }
+  45% { left: 140%; }
+  100% { left: 140%; }
 }
 
 h1 {
@@ -125,12 +132,10 @@ textarea {
   box-sizing: border-box;
   border-radius: 14px;
 
-  /* 内层磨砂玻璃 */
   background: radial-gradient(circle at top left, rgba(255,255,255,0.7), rgba(255,245,225,0.4));
   background-color: rgba(255,245,225,0.4);
   backdrop-filter: blur(8px);
 
-  /* 外层金属边框 + 内外阴影 */
   border: 1px solid rgba(255,255,255,0.8);
   box-shadow:
     inset 0 1px 2px rgba(255,255,255,0.9),
@@ -183,7 +188,7 @@ button {
   color: white;
   font-size: 14px;
   cursor: pointer;
-  transition: 
+  transition:
     background .2s,
     transform .1s,
     box-shadow .2s,
@@ -437,7 +442,7 @@ export default {
         upstreamResp = await fetch("https://ai.gitee.com/v1/images/generations", {
           method: "POST",
           headers: {
-            "Authorization": \`Bearer \${env.GITEE_AI_API_KEY}\`,
+            "Authorization": `Bearer ${env.GITEE_AI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -453,7 +458,7 @@ export default {
 
       const upstreamText = await upstreamResp.text();
       if (!upstreamResp.ok) {
-        return textResponse(upstreamText || \`Upstream error: \${upstreamResp.status}\`, 502);
+        return textResponse(upstreamText || `Upstream error: ${upstreamResp.status}`, 502);
       }
 
       let data;
