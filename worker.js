@@ -1,4 +1,4 @@
-// worker.js — v1.5
+// worker.js — v1.50
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
