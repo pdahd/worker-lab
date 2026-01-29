@@ -1,4 +1,4 @@
-// worker.js — v1.3
+// worker.js — v1.4
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -29,32 +29,44 @@ function htmlPage() {
       margin: 0; 
       padding: 16px; 
       background: #f2f2f2;
+      color: #222; /* 全局文字颜色 */
     }
 
-    /* 镀铬金属质感卡片 */
+    /* 深色金属镀铬卡片 */
     main { 
       max-width: 920px; 
       margin: 0 auto; 
-      border-radius: 16px;
+      border-radius: 18px;
 
-      /* 镀铬渐变 + 拉丝金属效果 */
-      background: linear-gradient(145deg, #fdfdfd, #dcdcdc, #f7f7f7);
-      background-size: 400% 400%;
-      animation: chromeShift 12s ease infinite;
+      /* 深色金属渐变 */
+      background: linear-gradient(145deg, #2b2b2b, #3d3d3d, #1f1f1f);
+      background-size: 300% 300%;
+      animation: chromeShift 10s ease infinite;
 
-      padding: 26px; 
+      padding: 28px; 
       box-shadow:
-        0 4px 12px rgba(0,0,0,0.12),
-        inset 0 1px 2px rgba(255,255,255,0.6),
-        inset 0 -1px 3px rgba(0,0,0,0.08);
-      border: 1px solid rgba(255,255,255,0.6);
+        0 6px 16px rgba(0,0,0,0.35),
+        inset 0 1px 2px rgba(255,255,255,0.15),
+        inset 0 -1px 3px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+
+      color: #f0f0f0; /* 卡片内部文字颜色 */
     }
 
-    /* 镀铬光泽动态效果 */
+    /* 金属流光动画 */
     @keyframes chromeShift {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .small {
+      color: #cccccc;
     }
 
     textarea { 
@@ -63,15 +75,16 @@ function htmlPage() {
       font-size: 14px; 
       box-sizing: border-box;
       border-radius: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid #aaa;
       outline: none;
-      background: #fff8e6;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      background: #fff8e6; /* 米黄色 */
+      color: #333; /* 输入文字颜色 */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
       transition: border-color .2s, box-shadow .2s;
     }
     textarea:focus {
-      border-color: #0078ff;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      border-color: #4da3ff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.35);
     }
 
     .row { 
@@ -85,14 +98,15 @@ function htmlPage() {
     select, input { 
       padding: 8px 10px; 
       border-radius: 8px;
-      border: 1px solid #ccc;
+      border: 1px solid #bbb;
       outline: none;
-      transition: border-color .2s;
-      background: #ffffffcc;
+      background: #ffffffdd;
+      color: #222;
       backdrop-filter: blur(4px);
+      transition: border-color .2s;
     }
     select:focus, input:focus {
-      border-color: #0078ff;
+      border-color: #4da3ff;
     }
 
     button { 
@@ -104,17 +118,17 @@ function htmlPage() {
       font-size: 14px;
       cursor: pointer;
       transition: background .2s, transform .1s, box-shadow .2s;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.35);
     }
     button:hover {
       background: linear-gradient(135deg, #3c8be6, #0055d6);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.45);
     }
     button:active {
       transform: scale(0.96);
     }
     button:disabled {
-      background: #999;
+      background: #777;
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -124,11 +138,11 @@ function htmlPage() {
       border-radius: 10px; 
       margin-top: 16px; 
       display:none; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
 
-    .err { color: crimson; margin-top: 12px; white-space: pre-wrap; }
-    .hint { color: #666; margin-top: 8px; }
-    .small { font-size: 12px; color: #777; margin-top: 8px; }
+    .err { color: #ff6b6b; margin-top: 12px; white-space: pre-wrap; }
+    .hint { color: #dddddd; margin-top: 8px; }
   </style>
 </head>
 <body>
