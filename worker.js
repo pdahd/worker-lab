@@ -1,4 +1,4 @@
-// worker.js — v1.2
+// worker.js — v1.3
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -31,13 +31,30 @@ function htmlPage() {
       background: #f2f2f2;
     }
 
+    /* 镀铬金属质感卡片 */
     main { 
       max-width: 920px; 
       margin: 0 auto; 
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 24px; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-radius: 16px;
+
+      /* 镀铬渐变 + 拉丝金属效果 */
+      background: linear-gradient(145deg, #fdfdfd, #dcdcdc, #f7f7f7);
+      background-size: 400% 400%;
+      animation: chromeShift 12s ease infinite;
+
+      padding: 26px; 
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.12),
+        inset 0 1px 2px rgba(255,255,255,0.6),
+        inset 0 -1px 3px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    /* 镀铬光泽动态效果 */
+    @keyframes chromeShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     textarea { 
@@ -48,8 +65,8 @@ function htmlPage() {
       border-radius: 10px;
       border: 1px solid #ccc;
       outline: none;
-      background: #fff8e6;        /* ← 米黄色背景 */
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* ← 输入框阴影 */
+      background: #fff8e6;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       transition: border-color .2s, box-shadow .2s;
     }
     textarea:focus {
@@ -71,6 +88,8 @@ function htmlPage() {
       border: 1px solid #ccc;
       outline: none;
       transition: border-color .2s;
+      background: #ffffffcc;
+      backdrop-filter: blur(4px);
     }
     select:focus, input:focus {
       border-color: #0078ff;
@@ -80,22 +99,24 @@ function htmlPage() {
       padding: 10px 18px;
       border-radius: 8px;
       border: none;
-      background: #0078ff;
+      background: linear-gradient(135deg, #4da3ff, #0066ff);
       color: white;
       font-size: 14px;
       cursor: pointer;
-      transition: background .2s, transform .1s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+      transition: background .2s, transform .1s, box-shadow .2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     }
     button:hover {
-      background: #0063d6;
+      background: linear-gradient(135deg, #3c8be6, #0055d6);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
     }
     button:active {
-      transform: scale(0.97);
+      transform: scale(0.96);
     }
     button:disabled {
       background: #999;
       cursor: not-allowed;
+      box-shadow: none;
     }
 
     img { 
