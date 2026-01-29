@@ -1,4 +1,4 @@
-// worker.js — v1.8
+// worker.js — v1.9
 // Cloudflare Worker: z-image-turbo text-to-image demo (no SDK, fetch-only)
 
 const SIZE_PRESETS = [
@@ -20,180 +20,183 @@ function htmlPage() {
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>z-image-turbo（Cloudflare Worker）</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>z-image-turbo（Cloudflare Worker）</title>
 
-  <style>
-    /* ======== 页面背景：浅棕色（无渐变） ======== */
-    body { 
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      margin: 0;
-      padding: 16px;
-      background: #e7d9c4; /* v1.8 浅棕色背景 */
-      color: #222;
-    }
+<style>
+/* ======== 页面背景：浅棕色 ======== */
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  margin: 0;
+  padding: 16px;
+  background: #e7d9c4;
+  color: #222;
+}
 
-    /* ======== 金属卡片：立体 + 拉丝 + 玻璃边框 ======== */
-    main {
-      max-width: 920px;
-      margin: 0 auto;
-      border-radius: 20px;
+/* ======== 金属卡片：立体 + 拉丝 + 玻璃边框 ======== */
+main {
+  max-width: 920px;
+  margin: 0 auto;
+  border-radius: 20px;
 
-      /* 金属拉丝纹理 */
-      background:
-        linear-gradient(90deg, rgba(255,255,255,0.25), rgba(0,0,0,0.05)),
-        repeating-linear-gradient(
-          90deg,
-          rgba(255,255,255,0.18) 0px,
-          rgba(255,255,255,0.18) 1px,
-          rgba(0,0,0,0.06) 2px,
-          rgba(0,0,0,0.06) 3px
-        ),
-        linear-gradient(135deg, #fafafa, #e6e6e6, #f5f5f5);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.25), rgba(0,0,0,0.05)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.18) 0px,
+      rgba(255,255,255,0.18) 1px,
+      rgba(0,0,0,0.06) 2px,
+      rgba(0,0,0,0.06) 3px
+    ),
+    linear-gradient(135deg, #fafafa, #e6e6e6, #f5f5f5);
 
-      background-size: 100% 100%, 200% 100%, 100% 100%;
-      position: relative;
-      overflow: hidden;
+  background-size: 100% 100%, 200% 100%, 100% 100%;
+  position: relative;
+  overflow: hidden;
 
-      padding: 30px;
+  padding: 30px;
 
-      /* 立体阴影 */
-      box-shadow:
-        0 10px 25px rgba(0,0,0,0.25),
-        inset 0 1px 2px rgba(255,255,255,0.7),
-        inset 0 -1px 3px rgba(0,0,0,0.15);
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.25),
+    inset 0 1px 2px rgba(255,255,255,0.7),
+    inset 0 -1px 3px rgba(0,0,0,0.15);
 
-      /* 玻璃边框 */
-      border: 1px solid rgba(255,255,255,0.55);
-      backdrop-filter: blur(4px);
-    }
+  border: 1px solid rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
+}
 
-    /* 扫光效果 */
-    main::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -150%;
-      width: 50%;
-      height: 100%;
-      background: linear-gradient(
-        120deg,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,0.55) 50%,
-        rgba(255,255,255,0) 100%
-      );
-      transform: skewX(-20deg);
-      animation: sweep 7s ease-in-out infinite;
-    }
+/* ======== 扫光效果：仅在 sweep-active 时运行 ======== */
+main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.55) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: skewX(-20deg);
+  opacity: 0; /* 默认不显示 */
+}
 
-    @keyframes sweep {
-      0% { left: -150%; }
-      50% { left: 150%; }
-      100% { left: 150%; }
-    }
+main.sweep-active::before {
+  opacity: 1;
+  animation: sweep 7s ease-in-out infinite;
+}
 
-    h1 {
-      color: #222;
-      text-shadow: 0 1px 2px rgba(255,255,255,0.7);
-    }
+@keyframes sweep {
+  0% { left: -150%; }
+  50% { left: 150%; }
+  100% { left: 150%; }
+}
 
-    .small {
-      color: #555;
-    }
+h1 {
+  color: #222;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+}
 
-    /* ======== 输入框：金属边框 + 内阴影 ======== */
-    textarea {
-      width: 100%;
-      padding: 12px;
-      font-size: 14px;
-      box-sizing: border-box;
-      border-radius: 10px;
+.small {
+  color: #555;
+}
 
-      background: #fff8e6;
-      color: #333;
+/* ======== 输入框：玻璃拟态 + 暖色半透明背景 ======== */
+textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+  border-radius: 12px;
 
-      border: 1px solid #c0c0c0;
-      box-shadow:
-        inset 0 1px 2px rgba(255,255,255,0.8),
-        inset 0 -1px 3px rgba(0,0,0,0.15),
-        0 2px 6px rgba(0,0,0,0.15);
+  background: rgba(255, 245, 225, 0.55);
+  backdrop-filter: blur(6px);
 
-      transition: border-color .2s, box-shadow .2s;
-    }
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.8),
+    inset 0 -1px 3px rgba(0,0,0,0.15),
+    0 2px 6px rgba(0,0,0,0.15);
 
-    textarea:focus {
-      border-color: #4da3ff;
-      box-shadow:
-        inset 0 1px 2px rgba(255,255,255,0.9),
-        inset 0 -1px 3px rgba(0,0,0,0.2),
-        0 3px 10px rgba(0,0,0,0.25);
-    }
+  color: #333;
+  transition: border-color .2s, box-shadow .2s;
+}
 
-    .row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-top: 12px;
-    }
+textarea:focus {
+  border-color: #4da3ff;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.9),
+    inset 0 -1px 3px rgba(0,0,0,0.2),
+    0 3px 10px rgba(0,0,0,0.25);
+}
 
-    select, input {
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #bbb;
-      background: #ffffffdd;
-      color: #222;
-      backdrop-filter: blur(4px);
-      transition: border-color .2s;
-    }
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 12px;
+}
 
-    select:focus, input:focus {
-      border-color: #4da3ff;
-    }
+select, input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  background: #ffffffdd;
+  color: #222;
+  backdrop-filter: blur(4px);
+  transition: border-color .2s;
+}
 
-    button {
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: none;
-      background: linear-gradient(135deg, #4da3ff, #0066ff);
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background .2s, transform .1s, box-shadow .2s;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.25);
-    }
+select:focus, input:focus {
+  border-color: #4da3ff;
+}
 
-    button:hover {
-      background: linear-gradient(135deg, #3c8be6, #0055d6);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-    }
+button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #4da3ff, #0066ff);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .2s, transform .1s, box-shadow .2s;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+}
 
-    button:active {
-      transform: scale(0.96);
-    }
+button:hover {
+  background: linear-gradient(135deg, #3c8be6, #0055d6);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
 
-    button:disabled {
-      background: #777;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
+button:active {
+  transform: scale(0.96);
+}
 
-    img {
-      max-width: 100%;
-      border-radius: 10px;
-      margin-top: 16px;
-      display: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    }
+button:disabled {
+  background: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
-    .err { color: #cc0000; margin-top: 12px; white-space: pre-wrap; }
-    .hint { color: #444; margin-top: 8px; }
-  </style>
+img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-top: 16px;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.err { color: #cc0000; margin-top: 12px; white-space: pre-wrap; }
+.hint { color: #444; margin-top: 8px; }
+</style>
 </head>
 
 <body>
-<main>
+<main id="card">
   <h1>z-image-turbo 文生图（Cloudflare Worker）</h1>
   <div class="small">提示：2048 档可能更慢；生成期间请保持页面在前台。</div>
 
@@ -222,6 +225,7 @@ function htmlPage() {
   const imgEl = $("img");
   const errEl = $("err");
   const statusEl = $("status");
+  const cardEl = $("card");
 
   let lastObjectUrl = null;
   let lastBlob = null;
@@ -244,6 +248,9 @@ function htmlPage() {
     lastBlob = null;
     cleanupObjectUrl();
 
+    /* ======== 启动扫光 ======== */
+    cardEl.classList.add("sweep-active");
+
     const prompt = promptEl.value.trim();
     const size = sizeEl.value;
     let steps = parseInt(stepsEl.value || "9", 10);
@@ -252,6 +259,7 @@ function htmlPage() {
     if (!prompt) {
       setStatus("");
       setError("Prompt 不能为空。");
+      cardEl.classList.remove("sweep-active");
       return;
     }
 
@@ -292,6 +300,9 @@ function htmlPage() {
     } finally {
       clearTimeout(t);
       genBtn.disabled = false;
+
+      /* ======== 停止扫光 ======== */
+      cardEl.classList.remove("sweep-active");
     }
   }
 
