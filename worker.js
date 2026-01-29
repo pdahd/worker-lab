@@ -27,9 +27,16 @@ function htmlPage() {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; 
       margin: 0; 
       padding: 16px; 
-      background: #f2f2f2;   /* ←← 已改为浅灰色背景 */
+      background: #f2f2f2; /* 浅灰背景 */
     }
-    main { max-width: 920px; margin: 0 auto; }
+    main { 
+      max-width: 920px; 
+      margin: 0 auto; 
+      background: #ffffff; /* 白色内容卡片 */
+      border-radius: 14px; /* 圆角 */
+      padding: 24px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06); /* 轻微阴影 */
+    }
     textarea { width: 100%; padding: 12px; font-size: 14px; box-sizing: border-box; }
     .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
     select, input { padding: 6px 8px; }
