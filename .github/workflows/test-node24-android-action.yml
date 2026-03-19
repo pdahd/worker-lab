@@ -1,0 +1,51 @@
+name: Test android-actions/setup-android on Node24
+
+on:
+  workflow_dispatch:
+
+env:
+  # 强制所有 JavaScript Actions 运行在 Node24
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  test-setup-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show runner info
+        run: |
+          echo "Runner OS: $RUNNER_OS"
+          echo "Runner Arch: $RUNNER_ARCH"
+          node -v || true
+          npm -v || true
+
+      - name: Run setup-android@v3 under Node24
+        uses: android-actions/setup-android@v3
+
+      - name: Verify Android environment
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "JAVA_HOME=$JAVA_HOME"
+
+          echo "---- which ----"
+          which adb || true
+          which sdkmanager || true
+          which avdmanager || true
+
+          echo "---- versions ----"
+          adb version || true
+          sdkmanager --version || true
+          avdmanager version || true
+
+      - name: Try listing installed SDK packages
+        shell: bash
+        run: |
+          sdkmanager --list_installed || true
+
+      - name: Final result
+        run: echo "If setup-android step passed, Node24 compatibility is likely OK."
