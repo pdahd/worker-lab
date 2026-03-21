@@ -23,7 +23,7 @@ jobs:
           npm -v || true
 
       - name: Run setup-android@v3 under Node24
-        uses: pdahd/setup-android-node24@main
+        uses: pdahd/setup-android-node24@v3
 
       - name: Verify Android environment
         shell: bash
