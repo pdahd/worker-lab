@@ -1,0 +1,58 @@
+name: 115 Remote Downloader to Artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      cdn_url:
+        description: '115 CDN 直链 (从浏览器地址栏复制的完整链接)'
+        required: true
+        type: string
+      file_name:
+        description: '保存的文件名 (留空则自动从 URL 中识别)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  download-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 安装 aria2 多线程下载器
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2
+
+      - name: 创建下载目录
+        run: mkdir -p downloads
+
+      - name: 从 115 CDN 高速下载文件
+        id: download
+        env:
+          CDN_URL: ${{ inputs.cdn_url }}
+          CUSTOM_NAME: ${{ inputs.file_name }}
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          
+          echo "🚀 开始从 115 CDN 拉取文件..."
+          cd downloads
+          
+          if [ -n "$CUSTOM_NAME" ]; then
+            # 使用用户自定义的文件名
+            aria2c -c -s 16 -x 16 --user-agent="$UA" --out="$CUSTOM_NAME" "$CDN_URL"
+            FINAL_FILE="$CUSTOM_NAME"
+          else
+            # 自动提取文件名
+            aria2c -c -s 16 -x 16 --user-agent="$UA" "$CDN_URL"
+            FINAL_FILE=$(ls -1 | head -n 1)
+          fi
+          
+          echo "✅ 下载完成，文件列表："
+          ls -lh
+          echo "final_file=$FINAL_FILE" >> $GITHUB_OUTPUT
+
+      - name: 上传文件至 GitHub 工件 (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.download.outputs.final_file || 'downloaded-file' }}
+          path: downloads/
+          retention-days: 7 # 工件在 GitHub 保存 7 天，可根据需要调整为 1~90 天
