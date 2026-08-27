@@ -1,6 +1,5 @@
-# ===== 115_Actions_Offline_DL v1.0.0 =====
-# 用法: 私有仓库手动触发; 输入直链(24h内取的)/文件名/UA(已预填)
-# 产物: 工件(zip)保留1天, 取回后建议删除该次run释放存储
+# ===== 115_Actions_Offline_DL v1.0.1 =====
+# 变更: 文件名输入框可留空, 自动从直链解析(含中文URL解码); 其余同 v1.0.0
 name: 115 Offline DL
 on:
   workflow_dispatch:
@@ -9,8 +8,9 @@ on:
         description: '115直链(取链后24h内有效)'
         required: true
       filename:
-        description: '文件名(如 Laggies-7.mp4)'
-        required: true
+        description: '文件名(留空=自动从直链解析)'
+        required: false
+        default: ''
       ua:
         description: '取链页面UA(默认已填,一般不用改)'
         required: false
@@ -30,6 +30,20 @@ jobs:
       NAME: ${{ inputs.filename }}
       UA: ${{ inputs.ua }}
     steps:
+      - name: 解析文件名(输入为空时取自直链)
+        run: |
+          if [ -z "$NAME" ]; then
+            BASE="${URL##*/}"          # 取最后一个 / 之后
+            BASE="${BASE%%\?*}"        # 去掉 ? 查询串
+            BASE="${BASE%%#*}"         # 去掉 # 锚点
+            NAME=$(python3 -c "import urllib.parse,sys;print(urllib.parse.unquote(sys.argv[1]))" "$BASE")
+          fi
+          if [ -z "$NAME" ]; then
+            echo "::error::无法从直链解析文件名, 请手动填写 filename"; exit 1
+          fi
+          echo "使用文件名: $NAME"
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+
       - name: 确保 aria2 存在
         run: which aria2c || (sudo apt-get update -qq && sudo apt-get install -y -qq aria2)
 
